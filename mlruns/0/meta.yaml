@@ -1,4 +1,4 @@
-artifact_location: ./mlruns/0
+artifact_location: file:///C:/Users/marcr/OneDrive/Documents/Data%20Science/NBA%20Project/mlruns/0
 experiment_id: '0'
 lifecycle_stage: active
-name: Default
+name: NBA MVP prediction model
