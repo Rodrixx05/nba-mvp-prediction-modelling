@@ -2,7 +2,7 @@ artifact_uri: file:///C:/Users/marcr/OneDrive/Documents/Data%20Science/NBA%20Pro
 end_time: 1646603949388
 entry_point_name: ''
 experiment_id: '0'
-lifecycle_stage: active
+lifecycle_stage: deleted
 name: ''
 run_id: 87350d88dc514b6f988f409b54326e2a
 run_uuid: 87350d88dc514b6f988f409b54326e2a
