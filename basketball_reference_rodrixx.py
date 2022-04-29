@@ -6,7 +6,7 @@ import numpy as np
 
 class BasketballReferenceGetter():
     """
-    Object which extracts players' individual stats for the given seasons from Basketball Reference
+    Object that extracts players' individual stats for the given seasons from Basketball Reference
     using WebScraping techniques.
     The object returns a DataFrame for the specified request
     """
@@ -17,22 +17,31 @@ class BasketballReferenceGetter():
     Protected Functions
     """
     def _create_ranks(self, df, col_start, col_end = None):
+        """
+        Adds new columns to the passed dataframe corresponding to the descending ranking of the selected columns
+        """
         df_ranks = df.iloc[:, col_start:col_end].rank(method = 'dense', ascending = False)
         df_ranks = df_ranks.add_suffix('_rank').astype(int)
         return df.join(df_ranks)     
 
     def _get_team_record(self, team, year):
+        """
+        Extracts the team record from the given season, in the form of W-L
+        """
         url = f'https://www.basketball-reference.com/teams/{team}/{year}.html'
         response = requests.get(url)
         if response.status_code != 200:
             return response.status_code
-
         soup = BeautifulSoup(response.text, features = "lxml")
         page_body = soup.find('div', {'data-template': 'Partials/Teams/Summary'})
         record = page_body.find('p').text.split()[1].strip(',')
         return record
     
     def _get_season_records(self, df): 
+        """
+        Given a dataframe with teams and seasons, it returns a dataframe 
+        containing the season record for each team as the %W column, and also the total games played as GT
+        """
         year = df['Season'].unique()[0]
         teams = list(df['Tm'].unique())
         teams.remove('TOT')
@@ -46,6 +55,11 @@ class BasketballReferenceGetter():
         return df_season_records
     
     def _fillna_tot_team(self, series, df):
+        """
+        It fills the team record column and the total games column 
+        for players who have played for more than one team.
+        For the team record, it does the weighted average. For the total games, it takes the max.
+        """
         if pd.isna(series['%W']):
             tot_gp = series['G']
             sub_df = df[(df['Rk'] == series['Rk']) & (df['Tm'] != 'TOT')]
@@ -55,6 +69,11 @@ class BasketballReferenceGetter():
         return series
     
     def _years_list(self, object):
+        """
+        Returns a list of integers according to the passed object, in order to loop over seasons.
+        The idea is to let the extractor functions accept an integer, a float, a list of numbers
+        or a string representing a range of seasons.
+        """
         if type(object) is int or type(object) is float:
             return [object]
         elif type(object) is str:
@@ -62,7 +81,7 @@ class BasketballReferenceGetter():
             return range(int(val_range[0]), int(val_range[1]) + 1)
         else:
             return object
-    
+
 
     """
     Public Functions
@@ -192,7 +211,7 @@ class BasketballReferenceGetter():
             if response.status_code != 200:
                 return response.status_code
 
-            soup = BeautifulSoup(response.text)
+            soup = BeautifulSoup(response.text, features = "lxml")
             table_body = soup.find('table', {'id': 'mvp'}).find('tbody')
             rows = table_body.find_all('tr')
 
