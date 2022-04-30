@@ -162,5 +162,7 @@ def display_linear_coef(model):
 
 def log_important_features_mlflow(graph):
     png_file_path = os.path.join(os.getcwd(), 'plots/important_features.png')
-    graph.get_figure().savefig(png_file_path)
+    fig = graph.get_figure()
+    plt.close(fig)
+    fig.savefig(png_file_path)
     mlflow.log_artifact(png_file_path)
