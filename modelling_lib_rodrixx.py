@@ -166,3 +166,44 @@ def log_important_features_mlflow(graph):
     plt.close(fig)
     fig.savefig(png_file_path)
     mlflow.log_artifact(png_file_path)
+
+def display_val_results_graphs(real_val_y, pred_val_y, players_series):
+    contenders_df, no_contenders_df = get_val_results(real_val_y, pred_val_y, players_series)
+    seasons = set(contenders_df.index.get_level_values(1))
+    
+    fig_cont, axs_cont = plt.subplots(int(len(seasons) // 2 + len(seasons) % 2), 2 , figsize = (40, 40));
+    fig_cont.subplots_adjust(hspace=.4)
+    for counter, season in enumerate(seasons):
+        cont_season_df = contenders_df.loc[pd.IndexSlice[:, season], :].sort_values(by = 'Share', ascending = False)
+        cont_season_df.rename({'Share': 'Real Share', 'PredShare': 'Predicted Share'}, axis = 1, inplace = True)
+        cont_season_df = cont_season_df.melt(id_vars = ['Player'], value_vars = ['Real Share', 'Predicted Share'], var_name = 'Type', value_name = 'Value')
+        sns.barplot(ax = axs_cont.flat[counter], x = 'Player', y = 'Value', hue = 'Type', data = cont_season_df)
+        axs_cont.flat[counter].set_title(f'MVP Voting Share for Contenders in {season - 1} - {season}')
+        axs_cont.flat[counter].set_ylabel('Voting Share Value')
+        axs_cont.flat[counter].set_xticklabels(axs_cont.flat[counter].get_xticklabels(),rotation = 30)
+        axs_cont.flat[counter].set_ylim((0, 1))
+    
+    fig_no_cont, axs_no_cont = plt.subplots(int(len(seasons) // 2 + len(seasons) % 2), 2 , figsize = (40, 40));
+    fig_no_cont.subplots_adjust(hspace=.4)
+    for counter, season in enumerate(seasons):
+        no_cont_season_df = no_contenders_df.loc[pd.IndexSlice[:, season], :].sort_values(by = 'PredShare', ascending = False)
+        no_cont_season_df = no_cont_season_df[no_cont_season_df['PredShare'] > .1].nlargest(15, 'PredShare')
+        sns.barplot(ax = axs_no_cont.flat[counter], x = 'Player', y = 'PredShare', data = no_cont_season_df)
+        axs_no_cont.flat[counter].set_title(f'Predicted MVP Voting Share for No Contenders in {season - 1} - {season} Season')
+        axs_no_cont.flat[counter].set_ylabel('Predicted Voting Share Value')
+        axs_no_cont.flat[counter].set_xticklabels(axs_no_cont.flat[counter].get_xticklabels(),rotation = 30)
+        axs_no_cont.flat[counter].set_ylim((0, 1))
+
+    return fig_cont, fig_no_cont
+
+def log_val_results_mlflow(graph_cont, graph_no_cont):
+    png_file_path_cont = os.path.join(os.getcwd(), 'plots/contenders_val_results.png')
+    png_file_path_no_cont = os.path.join(os.getcwd(), 'plots/no_contenders_val_results.png')
+    fig_cont = graph_cont.get_figure()
+    plt.close(fig_cont)
+    fig_cont.savefig(png_file_path_cont)
+    mlflow.log_artifact(png_file_path_cont)
+    fig_no_cont = graph_no_cont.get_figure()
+    plt.close(fig_no_cont)
+    fig_no_cont.savefig(png_file_path_no_cont)
+    mlflow.log_artifact(png_file_path_no_cont)
