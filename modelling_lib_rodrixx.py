@@ -55,21 +55,22 @@ def predict_model(model, datasets):
         results_dict[type] = prediction_series
     return results_dict
 
-def log_params_mlflow_xgb(params, sampling_ratio):
+def log_sampling_ratio_mlflow(ratio):
+    mlflow.log_param('sampling_ratio', ratio)
+
+def log_params_mlflow_xgb(params):
     mlflow.log_param('max_depth', params['max_depth'])
     mlflow.log_param('colsample_bytree', params['colsample_bytree'])
     mlflow.log_param('learning_rate', params['learning_rate'])
     mlflow.log_param('n_estimators', params['n_estimators'])
     mlflow.log_param('best_ntree_limit', params['best_ntree_limit'])
     mlflow.log_param('subsample', params['subsample'])
-    mlflow.log_param('sampling_ratio', sampling_ratio)
 
-def log_params_mlflow_rf(params, sampling_ratio):
+def log_params_mlflow_rf(params):
     mlflow.log_param('max_depth', params['max_depth'])
     mlflow.log_param('max_features', params['max_features'])
     mlflow.log_param('min_samples_split', params['min_samples_split'])
     mlflow.log_param('n_estimators', params['model__n_estimators'])
-    mlflow.log_param('sampling_ratio', sampling_ratio)
 
 def get_metrics(targets_real, targets_predicted, cv_scores):
     train_metrics = eval_metrics(targets_real['train'], targets_predicted['train'])
