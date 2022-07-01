@@ -58,6 +58,10 @@ def predict_model(model, datasets):
 def log_sampling_ratio_mlflow(ratio):
     mlflow.log_param('sampling_ratio', ratio)
 
+def log_params_mlflow_enet(params):
+    mlflow.log_param('alpha', params['alpha'])
+    mlflow.log_param('l1_ratio', params['l1_ratio'])
+
 def log_params_mlflow_xgb(params):
     mlflow.log_param('max_depth', params['max_depth'])
     mlflow.log_param('colsample_bytree', params['colsample_bytree'])
@@ -189,11 +193,12 @@ def display_val_results_graphs(real_val_y, pred_val_y, players_series):
     for counter, season in enumerate(seasons):
         no_cont_season_df = no_contenders_df.loc[pd.IndexSlice[:, season], :].sort_values(by = 'PredShare', ascending = False)
         no_cont_season_df = no_cont_season_df[no_cont_season_df['PredShare'] > .1].nlargest(15, 'PredShare')
-        sns.barplot(ax = axs_no_cont.flat[counter], x = 'Player', y = 'PredShare', data = no_cont_season_df)
-        axs_no_cont.flat[counter].set_title(f'Predicted MVP Voting Share for No Contenders in {season - 1} - {season} Season')
-        axs_no_cont.flat[counter].set_ylabel('Predicted Voting Share Value')
-        axs_no_cont.flat[counter].set_xticklabels(axs_no_cont.flat[counter].get_xticklabels(),rotation = 30)
-        axs_no_cont.flat[counter].set_ylim((0, 1))
+        if len(no_cont_season_df) > 0:
+            sns.barplot(ax = axs_no_cont.flat[counter], x = 'Player', y = 'PredShare', data = no_cont_season_df)
+            axs_no_cont.flat[counter].set_title(f'Predicted MVP Voting Share for No Contenders in {season - 1} - {season} Season')
+            axs_no_cont.flat[counter].set_ylabel('Predicted Voting Share Value')
+            axs_no_cont.flat[counter].set_xticklabels(axs_no_cont.flat[counter].get_xticklabels(),rotation = 30)
+            axs_no_cont.flat[counter].set_ylim((0, 1))
 
     return fig_cont, fig_no_cont
 
