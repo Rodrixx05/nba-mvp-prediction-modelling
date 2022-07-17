@@ -44,8 +44,21 @@ def retrieve_best(grid_object):
     best_model = grid_object.best_estimator_    
     best_params = grid_object.best_params_
     best_cv_score = grid_object.best_score_
-    best_params['best_ntree_limit'] = best_model.best_ntree_limit
     return best_model, best_params, best_cv_score
+
+def get_cv_scores(grid_search_results):
+    best_score_index = np.where(grid_search_results['rank_test_neg_root_mean_squared_error'] == 1)[0]
+    splits_keys = [key for key in grid_search_results.keys() if 'split' in key]
+    cv_scores = {'test_r2': [], 'test_neg_root_mean_squared_error': []}
+    for key in splits_keys:
+        if 'r2' in key:
+            cv_scores['test_r2'].append(grid_search_results[key][best_score_index])
+        elif 'neg_root_mean_squared_error' in key:
+            cv_scores['test_neg_root_mean_squared_error'].append(grid_search_results[key][best_score_index])
+    for key, value in cv_scores.items():
+        cv_scores[key] = np.array(value)
+    return cv_scores
+
 
 def predict_model(model, datasets):
     results_dict = {}
@@ -163,6 +176,7 @@ def display_linear_coef(model):
     graph.set_title('Most important features')
     graph.set_ylabel('Linear coefficient')
     graph.set_xlabel('Feature')
+    graph.set_xticklabels(graph.get_xticklabels(),rotation = 30)
     return graph
 
 def log_important_features_mlflow(graph):
