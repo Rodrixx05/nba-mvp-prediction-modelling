@@ -100,3 +100,25 @@ class OutlierFilter(BaseEstimator, TransformerMixin):
         self.index = X.index
         
         return X
+
+class ArrayToDataFrame(BaseEstimator, TransformerMixin):
+    '''
+    Clase que transforma un array en un DataFrame.
+    Necesita como parámetros el nombre de las columnas y el índice.
+    '''
+    
+    def __init__(self, columns, index = None):
+        self.columns = columns
+        self.index = index
+        
+    def fit(self, X, y = None):
+        return self
+    
+    def transform(self, X, y = None):
+        
+        if self.index is None:
+            df = pd.DataFrame(X, columns = self.columns)
+            
+        else:
+            df = pd.DataFrame(X, columns = self.columns, index = self.index)          
+        return df
