@@ -92,7 +92,7 @@ def log_params_mlflow_rf(params):
     mlflow.log_param('max_depth', params['max_depth'])
     mlflow.log_param('max_features', params['max_features'])
     mlflow.log_param('min_samples_split', params['min_samples_split'])
-    mlflow.log_param('n_estimators', params['model__n_estimators'])
+    mlflow.log_param('n_estimators', params['n_estimators'])
 
 def get_metrics(targets_real, targets_predicted, cv_scores):
     train_metrics = eval_metrics(targets_real['train'], targets_predicted['train'])
