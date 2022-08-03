@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/marcr/OneDrive/Documents/Data%20Science/NBA%20Project/mlruns/5/db71ea876dd04c71964d85770e129001/artifacts
+end_time: 1659548077414
+entry_point_name: ''
+experiment_id: '5'
+lifecycle_stage: active
+name: ''
+run_id: db71ea876dd04c71964d85770e129001
+run_uuid: db71ea876dd04c71964d85770e129001
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1659548021058
+status: 3
+tags: []
+user_id: marcr

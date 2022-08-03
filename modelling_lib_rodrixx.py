@@ -80,7 +80,6 @@ def log_params_mlflow_xgb(params):
     mlflow.log_param('colsample_bytree', params['colsample_bytree'])
     mlflow.log_param('learning_rate', params['learning_rate'])
     mlflow.log_param('n_estimators', params['n_estimators'])
-    mlflow.log_param('best_ntree_limit', params['best_ntree_limit'])
     mlflow.log_param('subsample', params['subsample'])
 
 def log_params_mlflow_dt(params):
@@ -190,10 +189,21 @@ def display_feature_importances(model):
     coef_df_top = coef_df.sort_values('abs_coef', ascending = False).nlargest(10, 'abs_coef')
     graph = sns.barplot(x = coef_df_top.index, y = coef_df_top['coef'], edgecolor = 'black')
     graph.set_title('Most important features')
-    graph.set_ylabel('Linear coefficient')
+    graph.set_ylabel('Importance coefficient')
     graph.set_xlabel('Feature')
     graph.set_xticklabels(graph.get_xticklabels(),rotation = 30)
-    return graph   
+    return graph  
+
+def display_feature_importances_xgb(model):
+    coef_df = pd.DataFrame(model.feature_importances_.T, index = model.get_booster().feature_names, columns = ['coef'])
+    coef_df['abs_coef'] = abs(coef_df['coef'])
+    coef_df_top = coef_df.sort_values('abs_coef', ascending = False).nlargest(10, 'abs_coef')
+    graph = sns.barplot(x = coef_df_top.index, y = coef_df_top['coef'], edgecolor = 'black')
+    graph.set_title('Most important features')
+    graph.set_ylabel('Importance coefficient')
+    graph.set_xlabel('Feature')
+    graph.set_xticklabels(graph.get_xticklabels(),rotation = 30)
+    return graph  
 
 def log_important_features_mlflow(graph):
     png_file_path = os.path.join(os.getcwd(), 'plots/important_features.png')
