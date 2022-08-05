@@ -93,6 +93,17 @@ def log_params_mlflow_rf(params):
     mlflow.log_param('min_samples_split', params['min_samples_split'])
     mlflow.log_param('n_estimators', params['n_estimators'])
 
+def log_params_mlflow_ens(params):
+    weights = params['weights']
+    if weights is None:
+        weight_xgb = 1
+        weight_rf = 1
+    else:
+        weight_xgb = weights[0]
+        weight_rf = weights[1]
+    mlflow.log_param('weight_xgb', weight_xgb)
+    mlflow.log_param('weight_rf', weight_rf)
+
 def get_metrics(targets_real, targets_predicted, cv_scores):
     train_metrics = eval_metrics(targets_real['train'], targets_predicted['train'])
     cv_metrics = {'rmse': abs(cv_scores['test_neg_root_mean_squared_error']).mean(), 'r2': cv_scores['test_r2'].mean()}

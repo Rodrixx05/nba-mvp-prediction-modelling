@@ -1,0 +1,4 @@
+artifact_location: file:///C:/Users/marcr/OneDrive/Documents/Data%20Science/NBA%20Project/mlruns/6
+experiment_id: '6'
+lifecycle_stage: active
+name: NBA MVP prediction Ensemble
