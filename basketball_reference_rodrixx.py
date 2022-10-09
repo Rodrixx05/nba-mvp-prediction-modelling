@@ -194,6 +194,8 @@ class BasketballReferenceGetter():
 
             df_player_stats_advanced['Player'] = df_player_stats_advanced['Player'].str.strip('*')
 
+            df_player_stats_advanced.loc[:, 'ORB%':'USG%'] = df_player_stats_advanced.loc[:, 'ORB%':'USG%'] / 100
+
             if ranks:
                 df_player_stats_advanced = self._create_ranks(df_player_stats_advanced, 6)
 
