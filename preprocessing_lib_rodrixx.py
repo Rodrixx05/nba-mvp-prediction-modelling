@@ -26,6 +26,7 @@ class DropColumns(BaseEstimator, TransformerMixin):
         self.cols_to_drop = cols_to_drop
     
     def fit(self, X, y = None):
+        self.drop_df = X[self.cols_to_drop]
         return self
     
     def transform(self, X, y = None):
@@ -51,6 +52,19 @@ class DropPlayers(BaseEstimator, TransformerMixin):
     
     def transform(self, X, y = None):
         return X.drop('Player', axis = 1)
+
+class OHE(BaseEstimator, TransformerMixin):
+    def __init__(self, col_to_ohe):
+        self.col_to_ohe = col_to_ohe
+    
+    def fit(self, X, y = None):
+        self.ohe_df = X[self.col_to_ohe]
+        return self
+    
+    def transform(self, X, y = None):
+        dummy_df = X[self.col_to_ohe].str.get_dummies(sep = '-').add_prefix(self.col_to_ohe + '_')
+        X.drop(columns = self.col_to_ohe, inplace = True)
+        return pd.concat([X, dummy_df], axis = 1)
 
 class OutlierFilter(BaseEstimator, TransformerMixin):
     '''
