@@ -47,7 +47,7 @@ class DropPlayers(BaseEstimator, TransformerMixin):
         self.players_list = []
     
     def fit(self, X, y = None):
-        self.players_list_ = X[['Player']]
+        self.players_list = X[['Player']]
         return self
     
     def transform(self, X, y = None):
@@ -58,7 +58,7 @@ class OHE(BaseEstimator, TransformerMixin):
         self.col_to_ohe = col_to_ohe
     
     def fit(self, X, y = None):
-        self.ohe_df = X[self.col_to_ohe]
+        self.ohe_series = X[self.col_to_ohe]
         return self
     
     def transform(self, X, y = None):
