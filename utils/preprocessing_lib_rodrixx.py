@@ -66,6 +66,26 @@ class OHE(BaseEstimator, TransformerMixin):
         X.drop(columns = self.col_to_ohe, inplace = True)
         return pd.concat([X, dummy_df], axis = 1)
 
+class AdjustCols(BaseEstimator, TransformerMixin):
+    def __init__(self, cols_to_adjust):
+        self.cols_to_adjust = cols_to_adjust
+    
+    def fit(self, X, y = None):
+        self.adjust_df = X[self.cols_to_adjust]
+        return self
+    
+    def transform(self, X, y = None):
+        for col in self.cols_to_adjust:
+            if col in ['OBPM, BPM']:
+                X.loc[X['%G'] < X['%G'].quantile(0.25), col] = -5
+            elif col == 'PER':
+                X.loc[X['%G'] < X['%G'].quantile(0.25), col] = 5
+            elif col == 'USG%':
+                X.loc[X['%G'] < X['%G'].quantile(0.25), col] = 0.05
+            elif col == 'WS/48':
+                X.loc[X['%G'] < X['%G'].quantile(0.25), col] = 0
+        return X
+
 class OutlierFilter(BaseEstimator, TransformerMixin):
     '''
     Clase que filtra los outliers utilizando np.quantile()
