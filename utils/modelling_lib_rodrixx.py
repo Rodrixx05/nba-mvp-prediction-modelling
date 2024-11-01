@@ -165,10 +165,9 @@ def log_advanced_metrics_mlflow(y_real, y_predict):
     mlflow.log_metric('rmse_cont', rmse_contenders)
     mlflow.log_metric('mae_no_cont', mae_no_contenders)
 
-def get_val_results(real_val_y, pred_val_y, players_series):
+def get_val_results(real_val_y, pred_val_y):
 
-    players_series_val = players_series[players_series.index.get_level_values(1) > 2015]
-    results_val = pd.concat([players_series_val, real_val_y, pred_val_y], axis = 1)
+    results_val = pd.concat([real_val_y, pred_val_y], axis = 1)
     
     results_val_contenders = results_val[results_val['Share'] > 0]
     results_val_no_contenders = results_val[results_val['Share'] == 0]
@@ -223,8 +222,8 @@ def log_important_features_mlflow(graph):
     fig.savefig(png_file_path)
     mlflow.log_artifact(png_file_path)
 
-def display_val_results_graphs(real_val_y, pred_val_y, players_series):
-    contenders_df, no_contenders_df = get_val_results(real_val_y, pred_val_y, players_series)
+def display_val_results_graphs(real_val_y, pred_val_y):
+    contenders_df, no_contenders_df = get_val_results(real_val_y, pred_val_y)
     seasons = set(contenders_df.index.get_level_values(1))
     
     fig_cont, axs_cont = plt.subplots(int(len(seasons) // 2 + len(seasons) % 2), 2 , figsize = (40, 40));
@@ -232,6 +231,7 @@ def display_val_results_graphs(real_val_y, pred_val_y, players_series):
     for counter, season in enumerate(seasons):
         cont_season_df = contenders_df.loc[pd.IndexSlice[:, season], :].sort_values(by = 'Share', ascending = False)
         cont_season_df.rename({'Share': 'Real Share', 'PredShare': 'Predicted Share'}, axis = 1, inplace = True)
+        cont_season_df = cont_season_df.reset_index().drop(columns = ['Season']).reset_index(drop = True)
         cont_season_df = cont_season_df.melt(id_vars = ['Player'], value_vars = ['Real Share', 'Predicted Share'], var_name = 'Type', value_name = 'Value')
         sns.barplot(ax = axs_cont.flat[counter], x = 'Player', y = 'Value', hue = 'Type', data = cont_season_df)
         axs_cont.flat[counter].set_title(f'MVP Voting Share for Contenders in {season - 1} - {season}')
@@ -244,6 +244,7 @@ def display_val_results_graphs(real_val_y, pred_val_y, players_series):
     for counter, season in enumerate(seasons):
         no_cont_season_df = no_contenders_df.loc[pd.IndexSlice[:, season], :].sort_values(by = 'PredShare', ascending = False)
         no_cont_season_df = no_cont_season_df[no_cont_season_df['PredShare'] > .1].nlargest(15, 'PredShare')
+        no_cont_season_df = no_cont_season_df.reset_index().drop(columns = ['Season']).reset_index(drop = True)
         if len(no_cont_season_df) > 0:
             sns.barplot(ax = axs_no_cont.flat[counter], x = 'Player', y = 'PredShare', data = no_cont_season_df)
             axs_no_cont.flat[counter].set_title(f'Predicted MVP Voting Share for No Contenders in {season - 1} - {season} Season')

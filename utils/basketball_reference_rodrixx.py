@@ -243,6 +243,7 @@ class BasketballReferenceGetter():
             response = requests.get(url)
             if response.status_code != 200:
                 return response.status_code
+            response.encoding = 'utf-8'
 
             soup = BeautifulSoup(response.text, features = "lxml")
             table_body = soup.find('table', {'id': 'mvp'}).find('tbody')
