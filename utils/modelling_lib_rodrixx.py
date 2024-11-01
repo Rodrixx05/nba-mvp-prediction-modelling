@@ -35,7 +35,7 @@ def oversample(df, os_param = 'ros', sampling_strategy = .25):
     return df_ros, sampling_strategy
 
 def eval_metrics(actual, predicted):
-    rmse = np.sqrt(metrics.mean_squared_error(actual, predicted))
+    rmse = metrics.root_mean_squared_error(actual, predicted)
     r2 = metrics.r2_score(actual, predicted)
 
     return {'rmse': rmse, 'r2': r2}
@@ -155,7 +155,7 @@ def get_advanced_metrics(y_real, y_predict):
     results_contenders = results[results['Share'] > 0]
     results_no_contenders = results[results['Share'] == 0]
 
-    rmse_contenders = metrics.mean_squared_error(results_contenders['Share'], results_contenders['PredShare']) ** .5
+    rmse_contenders = metrics.root_mean_squared_error(results_contenders['Share'], results_contenders['PredShare'])
     mae_no_contenders = metrics.mean_absolute_error(results_no_contenders['Share'], results_no_contenders['PredShare']) ** .5
 
     return rmse_contenders, mae_no_contenders

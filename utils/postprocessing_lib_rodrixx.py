@@ -36,7 +36,3 @@ def add_deleted_columns(base_df, dropcols_df, ohe_series):
 def format_column_name(column):
     return column.upper().replace('%', '#')
 
-
-
-
-
