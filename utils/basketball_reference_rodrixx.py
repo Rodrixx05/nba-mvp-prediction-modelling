@@ -1,5 +1,5 @@
 from unidecode import unidecode
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 import requests
 import pandas as pd
 import numpy as np
@@ -37,16 +37,28 @@ class BasketballReferenceGetter():
         record = page_body.find('p').text.split()[1].strip(',')
         return record
     
-    def _get_season_records(self, df): 
+    def _get_season_records(self, year): 
         """
         Given a dataframe with teams and seasons, it returns a dataframe 
         containing the season record for each team as the %W column, and also the total games played as GT
         """
-        year = df['Season'].unique()[0]
-        teams = list(df['Tm'].unique())
-        teams.remove('TOT')
-        df_season_records = pd.DataFrame(teams, columns = ['Tm'])
-        df_season_records['Record'] = df_season_records['Tm'].apply(self._get_team_record, args = (year,))
+        url = f"https://www.basketball-reference.com/leagues/NBA_{year}_standings.html"
+        response = requests.get(url)
+        if response.status_code != 200:
+            return response.status_code
+        soup_html = BeautifulSoup(response.text, features = "lxml")
+        for comment in soup_html.find_all(text = lambda text: isinstance(text, Comment)):
+            if comment.find("expanded_standings") > 0:
+                soup_div = BeautifulSoup(comment, features = "lxml")
+                break
+        table_body = soup_div.find('table', {'id': 'expanded_standings'}).find('tbody')
+        rows = table_body.find_all('tr')
+        standings = []
+        for row in rows:
+            team = row.find('td', {'data-stat': 'team_name'}).find('a', href = True)['href'].split('/')[2]
+            record = row.find('td', {'data-stat': 'Overall'}).text
+            standings.append([team, record])
+        df_season_records = pd.DataFrame(standings, columns = ['Tm', 'Record'])
         df_season_records['W'] = df_season_records['Record'].apply(lambda x: x.split('-')[0]).astype(int)
         df_season_records['L'] = df_season_records['Record'].apply(lambda x: x.split('-')[1]).astype(int)
         df_season_records['%W'] = round(df_season_records['W'] / (df_season_records['W'] + df_season_records['L']), 3)
@@ -254,7 +266,7 @@ class BasketballReferenceGetter():
                 df_return = pd.merge(left = df_return, right = df_adv, how = 'inner', on = ['Rk', 'Player', 'Pos', 'Age', 'Tm', 'G', 'Season'])
             
             if team_stats:
-                df_records = self._get_season_records(df_return)
+                df_records = self._get_season_records(year)
                 df_return = pd.merge(left = df_return, right = df_records, how = 'left', on = 'Tm')
                 df_return = df_return.apply(self._fillna_tot_team, axis = 1, args = (df_return, ))
                 if ranks:
