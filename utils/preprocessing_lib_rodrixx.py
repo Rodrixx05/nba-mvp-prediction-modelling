@@ -40,7 +40,7 @@ class SetIndex(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X, y = None):
-        return X.set_index(['Player', 'Season'], drop = False)
+        return X.set_index(['Player', 'Season'], drop = False).drop(columns = 'Season')
 
 class DropPlayers(BaseEstimator, TransformerMixin):
     def __init__(self):

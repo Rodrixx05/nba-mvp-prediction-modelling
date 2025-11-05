@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup, Comment
-import requests
+import cloudscraper
 import pandas as pd
 import numpy as np
 
@@ -10,7 +10,7 @@ class BasketballReferenceGetter():
     The object returns a DataFrame for the specified request
     """
     def __init__(self):
-        pass
+        self.scraper = cloudscraper.create_scraper()
 
     """
     Protected Functions
@@ -28,7 +28,7 @@ class BasketballReferenceGetter():
         Extracts the team record from the given season, in the form of W-L
         """
         url = f'https://www.basketball-reference.com/teams/{team}/{year}.html'
-        response = requests.get(url)
+        response = self.scraper.get(url)
         if response.status_code != 200:
             return response.status_code
         soup = BeautifulSoup(response.text, features = "lxml")
@@ -42,7 +42,7 @@ class BasketballReferenceGetter():
         containing the season record for each team as the %W column, and also the total games played as GT
         """
         url = f"https://www.basketball-reference.com/leagues/NBA_{year}_standings.html"
-        response = requests.get(url)
+        response = self.scraper.get(url)
         if response.status_code != 200:
             return response.status_code
         soup_html = BeautifulSoup(response.text, features = "lxml")
@@ -110,7 +110,7 @@ class BasketballReferenceGetter():
         return_list = []
         for year in self._years_list(years):
             url = f'https://www.basketball-reference.com/leagues/NBA_{year}_per_game.html'
-            response = requests.get(url)
+            response = self.scraper.get(url)
             if response.status_code != 200:
                 return response.status_code
             response.encoding = 'utf-8'
@@ -155,7 +155,7 @@ class BasketballReferenceGetter():
         return_list = []
         for year in self._years_list(years):
             url = f'https://www.basketball-reference.com/leagues/NBA_{year}_totals.html'
-            response = requests.get(url)
+            response = self.scraper.get(url)
             if response.status_code != 200:
                 return response.status_code
             response.encoding = 'utf-8'
@@ -198,17 +198,17 @@ class BasketballReferenceGetter():
         return_list = []
         for year in self._years_list(years):
             url = f'https://www.basketball-reference.com/leagues/NBA_{year}_advanced.html'
-            response = requests.get(url)
+            response = self.scraper.get(url)
             if response.status_code != 200:
                 return response.status_code
             response.encoding = 'utf-8'
             
             soup = BeautifulSoup(response.text, features = "lxml")
-            table_header = soup.find('table', {'id': 'advanced_stats'}).find('thead')
+            table_header = soup.find('table', {'id': 'advanced'}).find('thead')
             header = [row.text for row in table_header.find_all('th')]
 
-            table_body = soup.find('table', {'id': 'advanced_stats'}).find('tbody')
-            rows = table_body.find_all('tr', {'class': ['full_table', 'italic_text partial_table']})
+            table_body = soup.find('table', {'id': 'advanced'}).find('tbody')
+            rows = table_body.find_all('tr', class_ = lambda c: c is None or c == 'partial_table')
             players = []
             for row in rows:
                 player_data = [stat.text for stat in row.find_all(['td', 'th'])]
@@ -217,8 +217,11 @@ class BasketballReferenceGetter():
             df_player_stats_advanced = pd.DataFrame(players)
             df_player_stats_advanced.columns = header
 
-            df_player_stats_advanced.drop(columns = ['\xa0', 'Rk'], inplace = True)
+            df_player_stats_advanced.drop(columns = ['Awards', 'Rk'], inplace = True)
+            df_player_stats_advanced.rename(columns = {'Team': 'Tm'}, inplace = True)
+            df_player_stats_advanced['Tm'] = df_player_stats_advanced['Tm'].replace(to_replace = '\dTM', value = 'TOT', regex = True)
 
+            df_player_stats_advanced['GS']=  df_player_stats_advanced['GS'].replace('', '-10')
             df_player_stats_advanced.replace('', '0', inplace = True)
 
             df_player_stats_advanced = self._cast_numeric_columns(df_player_stats_advanced)
@@ -228,7 +231,7 @@ class BasketballReferenceGetter():
             df_player_stats_advanced.loc[:, 'ORB%':'USG%'] = df_player_stats_advanced.loc[:, 'ORB%':'USG%'] / 100
 
             if ranks:
-                df_player_stats_advanced = self._create_ranks(df_player_stats_advanced, 5)
+                df_player_stats_advanced = self._create_ranks(df_player_stats_advanced, 6)
 
             df_player_stats_advanced['Season'] = year
 
@@ -240,7 +243,7 @@ class BasketballReferenceGetter():
         return_list = []
         for year in self._years_list(years):
             url = f'https://www.basketball-reference.com/awards/awards_{year}.html#mvp'
-            response = requests.get(url)
+            response = self.scraper.get(url)
             if response.status_code != 200:
                 return response.status_code
             response.encoding = 'utf-8'
@@ -283,7 +286,7 @@ class BasketballReferenceGetter():
             if advanced:
                 df_adv = self.extract_player_stats_advanced(year, ranks)
                 df_adv.drop(columns = [col for col in df_tot.columns if col.startswith('MP')], inplace = True)
-                df_return = pd.merge(left = df_return, right = df_adv, how = 'inner', on = ['Player', 'Pos', 'Age', 'Tm', 'G', 'Season'])
+                df_return = pd.merge(left = df_return, right = df_adv, how = 'inner', on = ['Player', 'Pos', 'Age', 'Tm', 'G', 'GS','Season'])
             
             if team_stats:
                 df_records = self._get_season_records(year)

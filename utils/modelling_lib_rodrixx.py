@@ -93,6 +93,13 @@ def log_params_mlflow_rf(params):
     mlflow.log_param('min_samples_split', params['min_samples_split'])
     mlflow.log_param('n_estimators', params['n_estimators'])
 
+def log_params_mlflow_lgbm(params):
+    mlflow.log_param('max_depth', params['max_depth'])
+    mlflow.log_param('n_estimators', params['n_estimators'])
+    mlflow.log_param('learning_rate', params['learning_rate'])
+    mlflow.log_param('num_leaves', params['num_leaves'])
+    mlflow.log_param('min_child_samples', params['min_child_samples'])
+
 def log_params_mlflow_ens(params):
     weights = params['weights']
     if weights is None:
@@ -193,8 +200,7 @@ def display_linear_coef(model):
     graph.set_xticklabels(graph.get_xticklabels(),rotation = 30)
     return graph
 
-def display_feature_importances(model):
-    coef_df = pd.DataFrame(model.feature_importances_.T, index = model.feature_names_in_, columns = ['coef'])
+def generate_feature_importances_graph(coef_df):
     coef_df['abs_coef'] = abs(coef_df['coef'])
     coef_df_top = coef_df.sort_values('abs_coef', ascending = False).nlargest(10, 'abs_coef')
     graph = sns.barplot(x = coef_df_top.index, y = coef_df_top['coef'], edgecolor = 'black')
@@ -202,18 +208,19 @@ def display_feature_importances(model):
     graph.set_ylabel('Importance coefficient')
     graph.set_xlabel('Feature')
     graph.set_xticklabels(graph.get_xticklabels(),rotation = 30)
-    return graph  
+    return graph
+
+def display_feature_importances(model):
+    coef_df = pd.DataFrame(model.feature_importances_.T, index = model.feature_names_in_, columns = ['coef'])
+    return generate_feature_importances_graph(coef_df) 
 
 def display_feature_importances_xgb(model):
     coef_df = pd.DataFrame(model.feature_importances_.T, index = model.get_booster().feature_names, columns = ['coef'])
-    coef_df['abs_coef'] = abs(coef_df['coef'])
-    coef_df_top = coef_df.sort_values('abs_coef', ascending = False).nlargest(10, 'abs_coef')
-    graph = sns.barplot(x = coef_df_top.index, y = coef_df_top['coef'], edgecolor = 'black')
-    graph.set_title('Most important features')
-    graph.set_ylabel('Importance coefficient')
-    graph.set_xlabel('Feature')
-    graph.set_xticklabels(graph.get_xticklabels(),rotation = 30)
-    return graph  
+    return generate_feature_importances_graph(coef_df)
+
+def display_feature_importances_lgbm(model):
+    coef_df = pd.DataFrame(model.feature_importances_, index=model.feature_name_, columns=['coef'])
+    return generate_feature_importances_graph(coef_df)
 
 def log_important_features_mlflow(graph):
     png_file_path = os.path.join(os.getcwd(), 'plots/important_features.png')
